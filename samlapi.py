@@ -82,7 +82,14 @@ for inputtag in soup.find_all('input'):
 
 # Parse the returned assertion and extract the authorized roles 
 awsroles = [] 
-root = ET.fromstring(base64.b64decode(assertion))
+try:
+	root = ET.fromstring(base64.b64decode(assertion))
+except: 
+	print('An exception occurred.')
+	print('Output from connection negotiation:')
+	print(response.content)
+	print('Assertion')
+	print(assertion)
  
 for saml2attribute in root.iter('{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'): 
     if (saml2attribute.get('Name') == 'https://aws.amazon.com/SAML/Attributes/Role'): 
