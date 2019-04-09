@@ -8,11 +8,33 @@ import getpass
 import configparser 
 import base64 
 import xml.etree.ElementTree as ET 
+import os
 from bs4 import BeautifulSoup 
 from os.path import expanduser 
 from urllib.parse import urlparse, urlunparse 
 from requests_ntlm import HttpNtlmAuth
  
+################################################################################
+# Functions 
+def inputWithDefault (display, default):
+	value = input(display)
+	if len(value) == 0: value = default
+	return value
+
+def getAssertionFromResponse(response):
+	assertion = ''
+	# Decode the response and extract the SAML assertion 
+	soup = BeautifulSoup(response.text, features="html.parser") 
+	# Look for the SAMLResponse attribute of the input tag (determined by 
+	# analyzing the debug print(lines above) )
+	for inputtag in soup.find_all('input'): 
+	    if(inputtag.get('name') == 'SAMLResponse'): 
+	        #print(inputtag.get('value')) 
+	        assertion = inputtag.get('value')
+	return assertion;
+ 
+################################################################################
+
 ##########################################################################
 # Variables 
  
@@ -35,19 +57,17 @@ sslverification = True
 # idpentryurl: The initial URL that starts the authentication process. 
 idpentryurl = 'https://sts.rootdom.dk/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=urn:amazon:webservices' 
 
-def inputWithDefault (display, default):
-	value = input(display)
-	if len(value) == 0: value = default
-	return value
- 
 ##########################################################################
 
 # Get the federated credentials from the user
 currentUser = getpass.getuser()
+domain = inputWithDefault('Enter domain (' + os.environ['userdomain'].lower() + ')', os.environ['userdomain'].lower())
 username = inputWithDefault('Enter username (' + currentUser + '): ', currentUser)
 profile = inputWithDefault('Enter profile (saml): ', 'saml')
 password = getpass.getpass()
 print('')
+username = username + '@' + domain + '.rootdom.dk'
+print('Will use the username {0}'.format(username))
 
 # Initiate session handler 
 session = requests.Session() 
@@ -63,34 +83,28 @@ response = session.get(idpentryurl, headers=headers, verify=sslverification)
 # Debug the response if needed 
 print(response)
 
+assertion = getAssertionFromResponse(response)
+ 
+# Parse the returned assertion and extract the authorized roles 
+awsroles = [] 
+try:
+	root = ET.fromstring(base64.b64decode(assertion))
+except: 
+	print('An exception occurred using NTLM negotiation. retrying with post to sts.rootdom.dk');
+	payload = {'UserName': username, 'Password': password, 'optionForms': 'FormsAuthentication' }
+	session.auth = None
+	session.get(url = idpentryurl, headers = headers, verify = sslverification)
+	response = session.post(url = idpentryurl, headers=headers, verify=sslverification, data = payload)
+	assertion = getAssertionFromResponse(response)
+	root = ET.fromstring(base64.b64decode(assertion))
+	print(root)
+
 # Overwrite and delete the credential variables, just for safety
 username = '##############################################'
 password = '##############################################'
 del username
 del password
 
-# Decode the response and extract the SAML assertion 
-soup = BeautifulSoup(response.text, features="html.parser") 
-assertion = '' 
- 
-# Look for the SAMLResponse attribute of the input tag (determined by 
-# analyzing the debug print(lines above) )
-for inputtag in soup.find_all('input'): 
-    if(inputtag.get('name') == 'SAMLResponse'): 
-        #print(inputtag.get('value')) 
-        assertion = inputtag.get('value')
-
-# Parse the returned assertion and extract the authorized roles 
-awsroles = [] 
-try:
-	root = ET.fromstring(base64.b64decode(assertion))
-except: 
-	print('An exception occurred.')
-	print('Output from connection negotiation:')
-	print(response.content)
-	print('Assertion')
-	print(assertion)
- 
 for saml2attribute in root.iter('{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'): 
     if (saml2attribute.get('Name') == 'https://aws.amazon.com/SAML/Attributes/Role'): 
         for saml2attributevalue in saml2attribute.iter('{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue'):
