@@ -5,12 +5,12 @@ import boto.sts
 import boto.s3 
 import requests 
 import getpass 
-import ConfigParser 
+import configparser 
 import base64 
 import xml.etree.ElementTree as ET 
 from bs4 import BeautifulSoup 
 from os.path import expanduser 
-from urlparse import urlparse, urlunparse 
+from urllib.parse import urlparse, urlunparse 
 from requests_ntlm import HttpNtlmAuth
  
 ##########################################################################
@@ -39,7 +39,7 @@ idpentryurl = 'https://sts.rootdom.dk/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=
 
 # Get the federated credentials from the user
 print("Username:",)
-username = raw_input()
+username = input()
 password = getpass.getpass()
 print('')
 
