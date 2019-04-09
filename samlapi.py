@@ -38,7 +38,7 @@ idpentryurl = 'https://sts.rootdom.dk/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=
 ##########################################################################
 
 # Get the federated credentials from the user
-print("Username:",)
+print("Username:", end=' ')
 username = input()
 password = getpass.getpass()
 print('')
@@ -56,7 +56,6 @@ response = session.get(idpentryurl, headers=headers, verify=sslverification)
  
 # Debug the response if needed 
 print(response)
-print((response.text))
 
 # Overwrite and delete the credential variables, just for safety
 username = '##############################################'
