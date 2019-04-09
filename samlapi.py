@@ -38,8 +38,9 @@ idpentryurl = 'https://sts.rootdom.dk/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=
 ##########################################################################
 
 # Get the federated credentials from the user
-print("Username:", end=' ')
-username = input()
+currentUser = getpass.getuser()
+username = input("Enter username (" + currentUser + "): ")
+if len(username) == 0: username = currentUser
 password = getpass.getpass()
 print('')
 
