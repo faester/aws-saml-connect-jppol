@@ -38,10 +38,10 @@ idpentryurl = 'https://sts.rootdom.dk/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=
 ##########################################################################
 
 # Get the federated credentials from the user
-print "Username:",
+print("Username:",)
 username = raw_input()
 password = getpass.getpass()
-print ''
+print('')
 
 # Initiate session handler 
 session = requests.Session() 
@@ -54,7 +54,7 @@ session.auth = HttpNtlmAuth(username, password, session)
 response = session.get(idpentryurl, verify=sslverification) 
  
 # Debug the response if needed 
-#print (response.text)
+#print((response.text))
 
 # Overwrite and delete the credential variables, just for safety
 username = '##############################################'
@@ -67,7 +67,7 @@ soup = BeautifulSoup(response.text.decode('utf8'))
 assertion = '' 
  
 # Look for the SAMLResponse attribute of the input tag (determined by 
-# analyzing the debug print lines above) 
+# analyzing the debug print(lines above) )
 for inputtag in soup.find_all('input'): 
     if(inputtag.get('name') == 'SAMLResponse'): 
         #print(inputtag.get('value')) 
@@ -95,20 +95,20 @@ for awsrole in awsroles:
 
 # If I have more than one role, ask the user which one they want, 
 # otherwise just proceed 
-print "" 
+print("" )
 if len(awsroles) > 1: 
     i = 0 
-    print "Please choose the role you would like to assume:" 
+    print("Please choose the role you would like to assume:" )
     for awsrole in awsroles: 
-        print '[', i, ']: ', awsrole.split(',')[0] 
+        print('[', i, ']: ', awsrole.split(',')[0] )
         i += 1 
 
-    print "Selection: ", 
+    print("Selection: ", )
     selectedroleindex = raw_input() 
  
     # Basic sanity check of input 
     if int(selectedroleindex) > (len(awsroles) - 1): 
-        print 'You selected an invalid role index, please try again' 
+        print('You selected an invalid role index, please try again' )
         sys.exit(0) 
  
     role_arn = awsroles[int(selectedroleindex)].split(',')[0] 
@@ -146,12 +146,12 @@ with open(filename, 'w+') as configfile:
     config.write(configfile)
 
 # Give the user some basic info as to what has just happened
-print '\n\n----------------------------------------------------------------'
-print 'Your new access key pair has been stored in the AWS configuration file {0} under the saml profile.'.format(filename)
-print 'Note that it will expire at {0}.'.format(token.credentials.expiration)
-print 'After this time you may safely rerun this script to refresh your access key pair.'
-print 'To use this credential call the AWS CLI with the --profile option (e.g. aws --profile saml ec2 describe-instances).'
-print '----------------------------------------------------------------\n\n'
+print('\n\n----------------------------------------------------------------')
+print('Your new access key pair has been stored in the AWS configuration file {0} under the saml profile.'.format(filename))
+print('Note that it will expire at {0}.'.format(token.credentials.expiration))
+print('After this time you may safely rerun this script to refresh your access key pair.')
+print('To use this credential call the AWS CLI with the --profile option (e.g. aws --profile saml ec2 describe-instances).')
+print('----------------------------------------------------------------\n\n')
 
 # Use the AWS STS token to list all of the S3 buckets
 s3conn = boto.s3.connect_to_region(region,
@@ -161,5 +161,5 @@ s3conn = boto.s3.connect_to_region(region,
  
 buckets = s3conn.get_all_buckets()
  
-print 'Simple API example listing all s3 buckets:'
+print('Simple API example listing all s3 buckets:')
 print(buckets)
