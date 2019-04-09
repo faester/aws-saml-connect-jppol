@@ -18,7 +18,7 @@ from requests_ntlm import HttpNtlmAuth
  
 # region: The default AWS region that this script will connect 
 # to for all API calls 
-region = 'us-west-2' 
+region = 'eu-west-1' 
  
 # output format: The AWS CLI output format that will be configured in the 
 # saml profile (affects subsequent CLI calls) 
@@ -26,14 +26,14 @@ outputformat = 'json'
  
 # awsconfigfile: The file where this script will store the temp 
 # credentials under the saml profile 
-awsconfigfile = '/.aws/credentials'
+awsconfigfile = '~/.aws/credentials'
  
 # SSL certificate verification: Whether or not strict certificate 
 # verification is done, False should only be used for dev/test 
 sslverification = True 
  
 # idpentryurl: The initial URL that starts the authentication process. 
-idpentryurl = 'https://<fqdn>/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=urn:amazon:webservices' 
+idpentryurl = 'https://sts.rootdom.dk/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=urn:amazon:webservices' 
  
 ##########################################################################
 
