@@ -51,10 +51,12 @@ session = requests.Session()
 session.auth = HttpNtlmAuth(username, password, session) 
  
 # Opens the initial AD FS URL and follows all of the HTTP302 redirects 
-response = session.get(idpentryurl, verify=sslverification) 
+headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0'}
+response = session.get(idpentryurl, headers=headers, verify=sslverification) 
  
 # Debug the response if needed 
-#print((response.text))
+print(response)
+print((response.text))
 
 # Overwrite and delete the credential variables, just for safety
 username = '##############################################'
@@ -63,7 +65,7 @@ del username
 del password
 
 # Decode the response and extract the SAML assertion 
-soup = BeautifulSoup(response.text.decode('utf8')) 
+soup = BeautifulSoup(response.text, features="html.parser") 
 assertion = '' 
  
 # Look for the SAMLResponse attribute of the input tag (determined by 
