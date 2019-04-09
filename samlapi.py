@@ -26,7 +26,7 @@ outputformat = 'json'
  
 # awsconfigfile: The file where this script will store the temp 
 # credentials under the saml profile 
-awsconfigfile = '~/.aws/credentials'
+awsconfigfile = '/.aws/credentials'
  
 # SSL certificate verification: Whether or not strict certificate 
 # verification is done, False should only be used for dev/test 
@@ -106,7 +106,7 @@ if len(awsroles) > 1:
         i += 1 
 
     print("Selection: ", )
-    selectedroleindex = raw_input() 
+    selectedroleindex = input() 
  
     # Basic sanity check of input 
     if int(selectedroleindex) > (len(awsroles) - 1): 
@@ -129,7 +129,7 @@ home = expanduser("~")
 filename = home + awsconfigfile
  
 # Read in the existing config file
-config = ConfigParser.RawConfigParser()
+config = configparser.RawConfigParser()
 config.read(filename)
  
 # Put the credentials into a specific profile instead of clobbering
