@@ -34,13 +34,18 @@ sslverification = True
  
 # idpentryurl: The initial URL that starts the authentication process. 
 idpentryurl = 'https://sts.rootdom.dk/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=urn:amazon:webservices' 
+
+def inputWithDefault (display, default):
+	value = input(display)
+	if len(value) == 0: value = default
+	return value
  
 ##########################################################################
 
 # Get the federated credentials from the user
 currentUser = getpass.getuser()
-username = input("Enter username (" + currentUser + "): ")
-if len(username) == 0: username = currentUser
+username = inputWithDefault('Enter username (' + currentUser + '): ', currentUser)
+profile = inputWithDefault('Enter profile (saml): ', 'saml')
 password = getpass.getpass()
 print('')
 
@@ -134,14 +139,14 @@ config.read(filename)
  
 # Put the credentials into a specific profile instead of clobbering
 # the default credentials
-if not config.has_section('saml'):
-    config.add_section('saml')
+if not config.has_section(profile):
+    config.add_section(profile)
  
-config.set('saml', 'output', outputformat)
-config.set('saml', 'region', region)
-config.set('saml', 'aws_access_key_id', token.credentials.access_key)
-config.set('saml', 'aws_secret_access_key', token.credentials.secret_key)
-config.set('saml', 'aws_session_token', token.credentials.session_token)
+config.set(profile, 'output', outputformat)
+config.set(profile, 'region', region)
+config.set(profile, 'aws_access_key_id', token.credentials.access_key)
+config.set(profile, 'aws_secret_access_key', token.credentials.secret_key)
+config.set(profile, 'aws_session_token', token.credentials.session_token)
  
 # Write the updated config file
 with open(filename, 'w+') as configfile:
