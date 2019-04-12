@@ -17,17 +17,12 @@ You **must** provide a credentials file for the connection.
 Please edit `~/.aws/credentials` to contain at least: 
 
 
-[default]
-output = json
-region = eu-west-1
-aws_access_key_id = 
-aws_secret_access_key =
+    [default]
+    output = json
+    region = eu-west-1
+    aws_access_key_id = 
+    aws_secret_access_key =
 
-[saml]
-output = json
-region = eu-west-1
-aws_access_key_id = 
-aws_secret_access_key =
 
 ## python requirements
 
