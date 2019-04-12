@@ -33,7 +33,7 @@ aws_secret_access_key =
 
 ```
 pip install boto
-pip install requests
 pip install configparser
 pip install requests_ntlm
+pip install bs4
 ```
