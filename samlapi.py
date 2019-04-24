@@ -63,7 +63,7 @@ idpentryurl = 'https://sts.rootdom.dk/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=
 currentUser = getpass.getuser()
 domain = inputWithDefault('Enter domain (' + os.environ['userdomain'].lower() + ')', os.environ['userdomain'].lower())
 username = inputWithDefault('Enter username (' + currentUser + '): ', currentUser)
-profile = inputWithDefault('Enter profile (saml): ', 'saml')
+profile = inputWithDefault('Enter profile (default): ', 'default')
 password = getpass.getpass()
 print('')
 username = username + '@' + domain + '.rootdom.dk'
