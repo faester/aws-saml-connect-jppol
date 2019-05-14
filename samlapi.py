@@ -13,13 +13,39 @@ from bs4 import BeautifulSoup
 from os.path import expanduser 
 from urllib.parse import urlparse, urlunparse 
 from requests_ntlm import HttpNtlmAuth
+
+######
+class ConfigSettings:
+	def __init__(self):
+		self.username = getpass.getuser()
+		self.domain = os.environ['userdomain'].lower()
+		self.profile = 'default'
+
+	def askUser(self):
+		self.domain = inputWithDefault('Enter domain ({}):', settings.domain)
+		self.username = inputWithDefault('Enter username ({}):', settings.username)
+		self.profile = inputWithDefault('Enter profile ({}):', settings.profile)
+		
+	def inputWithDefault (display, default):
+		value = input(display.format(default))
+		if len(value) == 0: value = default
+		return value
+		
+	def getUsername(self): 
+		return self.username + '@' + self.domain + '.rootdom.dk'
+
+	def getPassword(self): 
+		return self.password 
  
+	def askPassword(self): 
+		self.password = getpass.getpass()
+		
+
+	def getProfile(self):
+		return self.profile
+
 ################################################################################
 # Functions 
-def inputWithDefault (display, default):
-	value = input(display)
-	if len(value) == 0: value = default
-	return value
 
 def getAssertionFromResponse(response):
 	assertion = ''
@@ -60,21 +86,17 @@ idpentryurl = 'https://sts.rootdom.dk/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=
 ##########################################################################
 
 # Get the federated credentials from the user
-currentUser = getpass.getuser()
-domain = inputWithDefault('Enter domain (' + os.environ['userdomain'].lower() + ')', os.environ['userdomain'].lower())
-username = inputWithDefault('Enter username (' + currentUser + '): ', currentUser)
-profile = inputWithDefault('Enter profile (default): ', 'default')
-password = getpass.getpass()
+settings = ConfigSettings()
 print('')
-username = username + '@' + domain + '.rootdom.dk'
-print('Will use the username {0}'.format(username))
+print('Will use the username {0}'.format(settings.getUsername()))
+settings.askPassword()
 
 # Initiate session handler 
 session = requests.Session() 
  
 # Programatically get the SAML assertion 
 # Set up the NTLM authentication handler by using the provided credential 
-session.auth = HttpNtlmAuth(username, password, session) 
+session.auth = HttpNtlmAuth(settings.getUsername(), settings.getPassword(), session) 
  
 # Opens the initial AD FS URL and follows all of the HTTP302 redirects 
 headers = {'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:66.0) Gecko/20100101 Firefox/66.0'}
@@ -160,14 +182,14 @@ config.read(filename)
  
 # Put the credentials into a specific profile instead of clobbering
 # the default credentials
-if not config.has_section(profile):
-    config.add_section(profile)
+if not config.has_section(settings.getProfile()):
+    config.add_section(settings.getProfile())
  
-config.set(profile, 'output', outputformat)
-config.set(profile, 'region', region)
-config.set(profile, 'aws_access_key_id', token.credentials.access_key)
-config.set(profile, 'aws_secret_access_key', token.credentials.secret_key)
-config.set(profile, 'aws_session_token', token.credentials.session_token)
+config.set(settings.getProfile(), 'output', outputformat)
+config.set(settings.getProfile(), 'region', region)
+config.set(settings.getProfile(), 'aws_access_key_id', token.credentials.access_key)
+config.set(settings.getProfile(), 'aws_secret_access_key', token.credentials.secret_key)
+config.set(settings.getProfile(), 'aws_session_token', token.credentials.session_token)
  
 # Write the updated config file
 with open(filename, 'w+') as configfile:
