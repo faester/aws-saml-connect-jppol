@@ -1,5 +1,6 @@
 #!/usr/bin/python 
  
+import argparse
 import sys 
 import boto.sts 
 import boto.s3 
@@ -16,17 +17,18 @@ from requests_ntlm import HttpNtlmAuth
 
 ######
 class ConfigSettings:
-	def __init__(self):
-		self.username = getpass.getuser()
-		self.domain = os.environ['userdomain'].lower()
-		self.profile = 'default'
+	def __init__(self, commandLineArguments):
+		self.username = commandLineArguments.getUser() 
+		self.domain = commandLineArguments.getDomain() 
+		self.profile = commandLineArguments.getProfile()
+		if commandLineArguments.getAsk(): self.askUser()
 
 	def askUser(self):
-		self.domain = inputWithDefault('Enter domain ({}):', settings.domain)
-		self.username = inputWithDefault('Enter username ({}):', settings.username)
-		self.profile = inputWithDefault('Enter profile ({}):', settings.profile)
+		self.domain = self.inputWithDefault('Enter domain ({}):', self.domain)
+		self.username = self.inputWithDefault('Enter username ({}):', self.username)
+		self.profile = self.inputWithDefault('Enter profile ({}):', self.profile)
 		
-	def inputWithDefault (display, default):
+	def inputWithDefault (self, display, default):
 		value = input(display.format(default))
 		if len(value) == 0: value = default
 		return value
@@ -43,6 +45,31 @@ class ConfigSettings:
 
 	def getProfile(self):
 		return self.profile
+
+class CommandLineArguments: 
+	def __init__(self): 
+		self.parser = argparse.ArgumentParser()
+		self.parser.add_argument("-p", "--profile", help="Specify which profile name to store settings in.", default="default")
+		self.parser.add_argument("-u", "--user", help="Specify username to user. Don't specify any domain information", default=getpass.getuser())
+		self.parser.add_argument("-d", "--domain", help="Specify domain", default=os.environ['userdomain'].lower())
+		self.parser.add_argument("-a", "--ask", help="Ask user for all values. Defaults from other command line arguments", action='store_true')
+		self.args = self.parser.parse_args()
+
+	def getProfile(self):
+		return self.args.profile
+
+	def getUser(self):
+		return self.args.user
+
+	def getDomain(self):
+		return self.args.domain
+
+	def getAsk(self):
+		return self.args.ask
+	
+
+	
+
 
 ################################################################################
 # Functions 
@@ -63,6 +90,7 @@ def getAssertionFromResponse(response):
 
 ##########################################################################
 # Variables 
+commandLineArguments = CommandLineArguments()
  
 # region: The default AWS region that this script will connect 
 # to for all API calls 
@@ -86,7 +114,7 @@ idpentryurl = 'https://sts.rootdom.dk/adfs/ls/IdpInitiatedSignOn.aspx?loginToRp=
 ##########################################################################
 
 # Get the federated credentials from the user
-settings = ConfigSettings()
+settings = ConfigSettings(commandLineArguments)
 print('')
 print('Will use the username {0}'.format(settings.getUsername()))
 settings.askPassword()
