@@ -2,6 +2,7 @@
  
 import argparse
 import sys 
+import re
 import boto3
 import requests 
 import getpass 
@@ -19,6 +20,7 @@ class ConfigSettings:
 	def __init__(self, commandLineArguments):
 		self.username = commandLineArguments.getUser() 
 		self.domain = commandLineArguments.getDomain() 
+		self.filter = commandLineArguments.getFilter()
 		self.profile = commandLineArguments.getProfile()
 		if commandLineArguments.getAsk(): self.askUser()
 
@@ -34,6 +36,9 @@ class ConfigSettings:
 		
 	def getUsername(self): 
 		return self.username + '@' + self.domain + '.rootdom.dk'
+
+	def getFilter(self):
+		return self.filter
 
 	def getPassword(self): 
 		return self.password 
@@ -52,6 +57,7 @@ class CommandLineArguments:
 		self.parser.add_argument("-u", "--user", help="Specify username to user. Don't specify any domain information", default=getpass.getuser())
 		self.parser.add_argument("-d", "--domain", help="Specify domain", default=os.environ['userdomain'].lower())
 		self.parser.add_argument("-a", "--ask", help="Ask user for all values. Defaults from other command line arguments", action='store_true')
+		self.parser.add_argument("-f", "--filter", help="Filter for returned role values. Specify full name (or unique match) to avoid selecting role and login directly.", default = ".*")
 		self.args = self.parser.parse_args()
 
 	def getProfile(self):
@@ -65,9 +71,9 @@ class CommandLineArguments:
 
 	def getAsk(self):
 		return self.args.ask
-	
 
-	
+	def getFilter(self):
+		return self.args.filter
 
 
 ################################################################################
@@ -168,6 +174,10 @@ for awsrole in awsroles:
         newawsrole = chunks[1] + ',' + chunks[0] 
         index = awsroles.index(awsrole) 
         awsroles.insert(index, newawsrole) 
+        awsroles.remove(awsrole)
+
+for awsrole in awsroles:
+    if not re.search(settings.getFilter(), awsrole):
         awsroles.remove(awsrole)
 
 # If I have more than one role, ask the user which one they want, 
