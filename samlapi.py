@@ -2,7 +2,6 @@
  
 import argparse
 import sys 
-import re
 import boto3
 import requests 
 import getpass 
@@ -57,7 +56,7 @@ class CommandLineArguments:
 		self.parser.add_argument("-u", "--user", help="Specify username to user. Don't specify any domain information", default=getpass.getuser())
 		self.parser.add_argument("-d", "--domain", help="Specify domain", default=os.environ['userdomain'].lower())
 		self.parser.add_argument("-a", "--ask", help="Ask user for all values. Defaults from other command line arguments", action='store_true')
-		self.parser.add_argument("-f", "--filter", help="Filter for returned role values. Specify full name (or unique match) to avoid selecting role and login directly.", default = ".*")
+		self.parser.add_argument("-f", "--filter", help="Filter for returned role values. Specify full name (or unique match) to avoid selecting role and login directly.", default = "")
 		self.args = self.parser.parse_args()
 
 	def getProfile(self):
@@ -141,7 +140,8 @@ print(response)
 assertion = getAssertionFromResponse(response)
  
 # Parse the returned assertion and extract the authorized roles 
-awsroles = [] 
+unfilteredawsroles = []
+awsroles = []
 try:
 	root = ET.fromstring(base64.b64decode(assertion))
 except: 
@@ -163,22 +163,22 @@ del password
 for saml2attribute in root.iter('{urn:oasis:names:tc:SAML:2.0:assertion}Attribute'): 
     if (saml2attribute.get('Name') == 'https://aws.amazon.com/SAML/Attributes/Role'): 
         for saml2attributevalue in saml2attribute.iter('{urn:oasis:names:tc:SAML:2.0:assertion}AttributeValue'):
-            awsroles.append(saml2attributevalue.text)
+            unfilteredawsroles.append(saml2attributevalue.text)
  
 # Note the format of the attribute value should be role_arn,principal_arn 
 # but lots of blogs list it as principal_arn,role_arn so let's reverse 
 # them if needed 
-for awsrole in awsroles: 
+for awsrole in unfilteredawsroles:
     chunks = awsrole.split(',') 
     if'saml-provider' in chunks[0]:
         newawsrole = chunks[1] + ',' + chunks[0] 
-        index = awsroles.index(awsrole) 
-        awsroles.insert(index, newawsrole) 
-        awsroles.remove(awsrole)
+        index = unfilteredawsroles.index(awsrole)
+        unfilteredawsroles.insert(index, newawsrole)
+        unfilteredawsroles.remove(awsrole)
 
-for awsrole in awsroles:
-    if not re.search(settings.getFilter(), awsrole):
-        awsroles.remove(awsrole)
+for awsrole in unfilteredawsroles:
+    if settings.getFilter() in awsrole:
+        awsroles.insert(0, awsrole)
 
 # If I have more than one role, ask the user which one they want, 
 # otherwise just proceed 
