@@ -21,7 +21,6 @@ Please edit `~/.aws/credentials` to contain at least:
 ## Python requirements
 
 ```
-pip install boto
 pip install boto3
 pip install configparser
 pip install requests_ntlm

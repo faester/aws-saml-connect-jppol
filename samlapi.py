@@ -2,8 +2,7 @@
  
 import argparse
 import sys 
-import boto.sts 
-import boto.s3 
+import boto3
 import requests 
 import getpass 
 import configparser 
@@ -197,9 +196,10 @@ else:
     principal_arn = awsroles[0].split(',')[1]
 
 # Use the assertion to get an AWS STS token using Assume Role with SAML
-conn = boto.sts.connect_to_region(region)
-token = conn.assume_role_with_saml(role_arn, principal_arn, assertion)
+conn = boto3.client('sts')
+token = conn.assume_role_with_saml(RoleArn = role_arn, PrincipalArn = principal_arn, SAMLAssertion = assertion, DurationSeconds = 3600)
 
+print(token)
 # Write the AWS STS token into the AWS credential file
 home = expanduser("~")
 filename = home + awsconfigfile
@@ -215,9 +215,9 @@ if not config.has_section(settings.getProfile()):
  
 config.set(settings.getProfile(), 'output', outputformat)
 config.set(settings.getProfile(), 'region', region)
-config.set(settings.getProfile(), 'aws_access_key_id', token.credentials.access_key)
-config.set(settings.getProfile(), 'aws_secret_access_key', token.credentials.secret_key)
-config.set(settings.getProfile(), 'aws_session_token', token.credentials.session_token)
+config.set(settings.getProfile(), 'aws_access_key_id', token['Credentials']['AccessKeyId'])
+config.set(settings.getProfile(), 'aws_secret_access_key', token['Credentials']['SecretAccessKey'])
+config.set(settings.getProfile(), 'aws_session_token', token['Credentials']['SessionToken'])
  
 # Write the updated config file
 with open(filename, 'w+') as configfile:
@@ -226,18 +226,12 @@ with open(filename, 'w+') as configfile:
 # Give the user some basic info as to what has just happened
 print('\n\n----------------------------------------------------------------')
 print('Your new access key pair has been stored in the AWS configuration file {0} under the saml profile.'.format(filename))
-print('Note that it will expire at {0}.'.format(token.credentials.expiration))
+print('Note that it will expire at {0}.'.format(token['Credentials']['Expiration']))
 print('After this time you may safely rerun this script to refresh your access key pair.')
 print('To use this credential call the AWS CLI with the --profile option (e.g. aws --profile saml ec2 describe-instances).')
 print('----------------------------------------------------------------\n\n')
 
-# Use the AWS STS token to list all of the S3 buckets
-s3conn = boto.s3.connect_to_region(region,
-                     aws_access_key_id=token.credentials.access_key,
-                     aws_secret_access_key=token.credentials.secret_key,
-                     security_token=token.credentials.session_token)
- 
-buckets = s3conn.get_all_buckets()
- 
-print('Simple API example listing all s3 buckets:')
-print(buckets)
+iamid = conn.get_caller_identity()['Arn']
+
+print('Assumed role is:')
+print(iamid)
