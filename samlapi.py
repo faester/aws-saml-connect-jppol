@@ -146,7 +146,7 @@ try:
 	root = ET.fromstring(base64.b64decode(assertion))
 except: 
 	print('An exception occurred using NTLM negotiation. retrying with post to sts.rootdom.dk');
-	payload = {'UserName': username, 'Password': password, 'optionForms': 'FormsAuthentication' }
+	payload = {'UserName': settings.getUsername(), 'Password': settings.getPassword(), 'optionForms': 'FormsAuthentication' }
 	session.auth = None
 	session.get(url = idpentryurl, headers = headers, verify = sslverification)
 	response = session.post(url = idpentryurl, headers=headers, verify=sslverification, data = payload)
