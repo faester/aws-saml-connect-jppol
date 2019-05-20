@@ -241,7 +241,7 @@ print('After this time you may safely rerun this script to refresh your access k
 print('To use this credential call the AWS CLI with the --profile option (e.g. aws --profile saml ec2 describe-instances).')
 print('----------------------------------------------------------------\n\n')
 
-iamid = conn.get_caller_identity()['Arn']
+iamid = token['AssumedRoleUser']['Arn']
 
 print('Assumed role is:')
 print(iamid)
