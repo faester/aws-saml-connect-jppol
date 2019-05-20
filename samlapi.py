@@ -20,6 +20,7 @@ class ConfigSettings:
 		self.username = commandLineArguments.getUser() 
 		self.domain = commandLineArguments.getDomain() 
 		self.filter = commandLineArguments.getFilter()
+		self.tokenDuration = commandLineArguments.getTokenDuration()
 		self.profile = commandLineArguments.getProfile()
 		if commandLineArguments.getAsk(): self.askUser()
 
@@ -33,6 +34,9 @@ class ConfigSettings:
 		if len(value) == 0: value = default
 		return value
 		
+	def getTokenDuration(self):
+		return int(self.tokenDuration)
+
 	def getUsername(self): 
 		return self.username + '@' + self.domain + '.rootdom.dk'
 
@@ -56,6 +60,7 @@ class CommandLineArguments:
 		self.parser.add_argument("-u", "--user", help="Specify username to user. Don't specify any domain information", default=getpass.getuser())
 		self.parser.add_argument("-d", "--domain", help="Specify domain", default=os.environ['userdomain'].lower())
 		self.parser.add_argument("-a", "--ask", help="Ask user for all values. Defaults from other command line arguments", action='store_true')
+		self.parser.add_argument("-td", "--tokenDuration", help="Token duration in seconds. Default is 3600 which is the default in AWS, but generally speaking longer durations are more convenient.", default="3600")
 		self.parser.add_argument("-f", "--filter", help="Filter for returned role values. Specify full name (or unique match) to avoid selecting role and login directly.", default = "")
 		self.args = self.parser.parse_args()
 
@@ -67,6 +72,9 @@ class CommandLineArguments:
 
 	def getDomain(self):
 		return self.args.domain
+
+	def getTokenDuration(self): 
+		return self.args.tokenDuration
 
 	def getAsk(self):
 		return self.args.ask
@@ -207,7 +215,7 @@ else:
 
 # Use the assertion to get an AWS STS token using Assume Role with SAML
 conn = boto3.client('sts')
-token = conn.assume_role_with_saml(RoleArn = role_arn, PrincipalArn = principal_arn, SAMLAssertion = assertion, DurationSeconds = 3600)
+token = conn.assume_role_with_saml(RoleArn = role_arn, PrincipalArn = principal_arn, SAMLAssertion = assertion, DurationSeconds = settings.getTokenDuration())
 
 print(token)
 # Write the AWS STS token into the AWS credential file
