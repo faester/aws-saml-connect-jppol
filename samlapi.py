@@ -58,11 +58,17 @@ class CommandLineArguments:
 		self.parser = argparse.ArgumentParser()
 		self.parser.add_argument("-p", "--profile", help="Specify which profile name to store settings in.", default="default")
 		self.parser.add_argument("-u", "--user", help="Specify username to user. Don't specify any domain information", default=getpass.getuser())
-		self.parser.add_argument("-d", "--domain", help="Specify domain", default=os.environ['userdomain'].lower())
+		self.parser.add_argument("-d", "--domain", help="Specify domain", default=self.__userdomain())
 		self.parser.add_argument("-a", "--ask", help="Ask user for all values. Defaults from other command line arguments", action='store_true')
 		self.parser.add_argument("-td", "--tokenDuration", help="Token duration in seconds. Default is 3600 which is the default in AWS, but generally speaking longer durations are more convenient.", default="3600")
 		self.parser.add_argument("-f", "--filter", help="Filter for returned role values. Specify full name (or unique match) to avoid selecting role and login directly.", default = "")
 		self.args = self.parser.parse_args()
+
+	def __userdomain(self):
+		if 'userdomain' in os.environ:
+			os.environ['userdomain'].lower()
+		else:
+			return 'polhus'
 
 	def getProfile(self):
 		return self.args.profile
