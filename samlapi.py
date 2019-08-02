@@ -209,9 +209,12 @@ if len(awsroles) > 1:
     role_arn = awsroles[int(selectedroleindex)].split(',')[0] 
     principal_arn = awsroles[int(selectedroleindex)].split(',')[1]
  
-else: 
+elif len(awsroles) == 1: 
     role_arn = awsroles[0].split(',')[0] 
     principal_arn = awsroles[0].split(',')[1]
+else:
+    print ("No roles returned. (If you have provided a filter you might test the unfiltered result.")
+    quit()
 
 # Use the assertion to get an AWS STS token using Assume Role with SAML
 conn = boto3.client('sts')
