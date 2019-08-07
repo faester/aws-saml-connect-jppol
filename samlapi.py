@@ -66,7 +66,7 @@ class CommandLineArguments:
 
 	def __userdomain(self):
 		if 'userdomain' in os.environ:
-			os.environ['userdomain'].lower()
+			return os.environ['userdomain'].lower()
 		else:
 			return 'polhus'
 
